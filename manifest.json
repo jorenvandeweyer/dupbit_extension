@@ -7,12 +7,18 @@
 	"version": "2.0.0",
 	"manifest_version": 2,
 	"background": {
-		"scripts": [ "jquery.js", "background.js", "src/facebook.js" ]
+		"scripts": [ "jquery.js", "background.js", "src/websocket.js", "src/actions.js" ]
 	},
+    "content_scripts": [
+        {
+            "matches": ["*://*.youtube.com/*"],
+            "js": ["src/inject/youtube.js"]
+        }
+    ],
 	"browser_action": {
 		"default_icon": "images/icon.png",
 		"default_title": "Dupbit Extension",
 		"default_popup": "popup.html"
 	},
-	"permissions": [ "downloads","activeTab","webRequest","https://dupbit.com/" ]
+	"permissions": [ "*://*/*", "tabs", "downloads","activeTab","webRequest", "storage" ]
 }

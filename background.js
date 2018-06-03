@@ -1,5 +1,7 @@
 queue = [];
 session = "";
+ws = "";
+actions = "";
 
 function download(qid, url, title, artist) {
     $.ajax({
@@ -37,4 +39,35 @@ function download(qid, url, title, artist) {
             views[i].updateQueueReadyState(qid);
         }
     });
+}
+
+setTimeout(setupWS, 500);
+
+function setupWS() {
+    ws = chrome.extension.getBackgroundPage().newWebSocket();
+    actions = chrome.extension.getBackgroundPage().Actions;
+    ws.on("message", messageHandler);
+}
+
+async function messageHandler(msg) {
+    console.log(msg);
+    if (msg.action) {
+        const action = msg.action;
+        if (action.name in actions) {
+            const fn = actions[action.name];
+            const result = await fn(action.data.action, action.data.value);
+            console.log("RESULT");
+            console.log(result);
+            ws.send({
+                action: action.name,
+                feedback: result,
+                success: true,
+            });
+        } else {
+            ws.send({
+                action: action.name,
+                success: false,
+            });
+        }
+    }
 }
