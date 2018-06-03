@@ -37,7 +37,7 @@ class WS extends EventEmitter{
             return this.emit("login");
         }
 
-        this.ws = new WebSocket(`wss://localhost`);
+        this.ws = new WebSocket(`wss://dupbit.com`);
 
         this.ws.onopen = (event) => {
             this.retry = 0;
@@ -57,7 +57,7 @@ class WS extends EventEmitter{
     }
 
     async checkStatus() {
-        return await getURL("https://localhost/api/loginStatus");
+        return await getURL("https://dupbit.com/api/loginStatus");
     }
 
     send(msg) {
