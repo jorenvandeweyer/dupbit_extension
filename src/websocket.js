@@ -52,6 +52,7 @@ class WS extends EventEmitter{
         };
 
         this.ws.onclose = (event) => {
+            console.log("connection was closed");
             if (!this.noRetry) this.reconnect();
         }
     }
@@ -91,64 +92,10 @@ function newWebSocket() {
     return new WS();
 }
 
-async function getAuthKey() {
-    return new Promise((resolve, reject) => {
-        chrome.storage.local.get(['auth_key'], (result) => {
-            console.log(result);
-            resolve(result);
-        });
-    });
-}
-
-async function setAuthKey(value) {
-    return await setStorage("auth_key", value)
-}
-
-async function getAuthKey() {
-    const keys = await getStorage("auth_key");
-    if ("auth_key" in keys) {
-        return keys.auth_key;
-    } else {
-        return null;
-    }
-}
-
-async function removeAuthKey() {
-    return await removeStorage("auth_key");
-}
-
-function getStorage(key) {
-    return new Promise((resolve, reject) => {
-        chrome.storage.local.get([key], (result) => {
-            resolve(result);
-        });
-    });
-}
-
-function setStorage(key, value) {
-    return new Promise((resolve, reject) => {
-        const obj = {};
-        obj[key] = value;
-
-        chrome.storage.local.set(obj, () => {
-            resolve();
-        });
-    });
-}
-
-function removeStorage(key) {
-    return new Promise((resolve, reject) => {
-        chrome.storage.local.remove(key, () => {
-            resolve();
-        });
-    });
-}
-
 function getURL(url, data={}) {
     const getParams = Object.keys(data).map(function(k) {
         return encodeURIComponent(k) + "=" + encodeURIComponent(data[k]);
     }).join('&')
-    console.log(getURL);
 
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();

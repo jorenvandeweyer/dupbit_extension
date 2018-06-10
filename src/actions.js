@@ -7,7 +7,6 @@ Actions = {
                 reason: "No youtube clients open",
             });
             chrome.tabs.sendMessage(yt_tab.id, {action, value}, (response) => {
-                console.log("RESP:", response);
                 resolve(response);
             });
         });
