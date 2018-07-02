@@ -9,7 +9,7 @@
 	"version": "1.0.0",
 	"manifest_version": 2,
 	"background": {
-		"scripts": [ "jquery.js", "src/actions.js", "src/request.js", "src/websocket.js", "background.js" ]
+		"scripts": [ "src/actions.js", "src/request.js", "src/websocket.js", "background.js" ]
 	},
     "content_scripts": [
         {
