@@ -51,6 +51,10 @@ class WS extends EventEmitter{
             this.emit(event.type, JSON.parse(event.data));
         };
 
+        this.ws.onerror = (event) => {
+            console.log(event);
+        }
+
         this.ws.onclose = (event) => {
             console.log("connection was closed");
             if (!this.noRetry) this.reconnect();
@@ -58,7 +62,7 @@ class WS extends EventEmitter{
     }
 
     async checkStatus() {
-        return await getURL("https://dupbit.com/api/loginStatus");
+        return await Request.get("https://dupbit.com/api/loginStatus");
     }
 
     send(msg) {
@@ -86,25 +90,4 @@ class WS extends EventEmitter{
         this.emit("login");
     }
 
-}
-
-function newWebSocket() {
-    return new WS();
-}
-
-function getURL(url, data={}) {
-    const getParams = Object.keys(data).map(function(k) {
-        return encodeURIComponent(k) + "=" + encodeURIComponent(data[k]);
-    }).join('&')
-
-    return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open("GET", `${url}?${getParams}`, true);
-        xhr.withCredentials = true;
-        xhr.onload = () => resolve(JSON.parse(xhr.responseText));
-        xhr.onerror = () => reject(xhr.statusText);
-        xhr.send();
-    }).catch((e) => {
-        return null;
-    });
 }

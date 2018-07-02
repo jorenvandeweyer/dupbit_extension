@@ -1,202 +1,147 @@
-function isYoutubeVideo(url) {
-    return url.indexOf("https://www.youtube.com/watch?v=") >= 0;
-}
+class YouTube {
+    constructor(tab, session) {
+        if (session.level < 2) return;
 
-function getId(url) {
-    var ytid = url.split("v=")[1];
-    var ampersandPosition = ytid.indexOf("&");
-    if(ampersandPosition != -1) {
-        ytid = ytid.substring(0, ampersandPosition);
-    }
-    return ytid;
-}
-
-function getVideoName(title) {
-    return title.replace(" - YouTube", "");
-}
-
-var session = chrome.extension.getBackgroundPage().session;
-var queue = chrome.extension.getBackgroundPage().queue;
-var queueTableBody = $("#queue tbody");
-
-function showQueue() {
-    for (qid in queue) {
-        var item = queue[qid];
-        addToQueue(qid, item.artist, item.title, item.readyState);
-    }
-    if (queue.length > 0) {
-        $("#queue").show();
-    }
-}
-
-function hideQueue() {
-    $("#queue").hide();
-}
-
-function addToQueue(qid, artist, title, readyState) {
-    imgSrc = readyState ? "ready.png": "loading.gif";
-    queueTableBody.prepend("<tr id='"+qid+"'><td>"+artist+"</td><td>"+title+"</td><td><img  width='16px' src='images/"+imgSrc+"'/></td>/tr>");
-    $("#queue").show();
-}
-
-function updateQueueReadyState(qid) {
-    queueTableBody.find("#"+qid+" img").attr("src", "images/ready.png");
-}
-
-function showMessage(string) {
-    $("#message span").text(string);
-    $("#message").show();
-}
-
-function hideMessage() {
-    $("#message").hide();
-}
-
-function showDownload(videoName) {
-    if (videoName.indexOf(" - ") > -1) {
-        var artist = videoName.split(" - ")[0].replace(/[\\\/:*?"<>|]/g, "");
-        var title = videoName.split(" - ")[1].replace(/[\\\/:*?"<>|]/g, "");
-    }
-    else {
-        var artist = "";
-        var title = videoName;
+        this.valid = tab.url.includes("youtube.com");
+        if (this.valid) this.init(tab);
     }
 
-    $("#artist").val(artist);
-    $("#title").val(title);
-    $("#download").show();
-    $("#title").select();
-}
-
-function hideDownload() {
-    $("#download").hide();
-}
-
-function showLogin(tab) {
-    $("#submit").removeClass("disabled");
-    $("#login").show();
-}
-
-function hideLogin() {
-    $("#login").hide();
-}
-
-async function getStatus() {
-    let data = await ajax_call({
-        url: "https://dupbit.com/api/loginStatus",
-        type: "get",
-        data: {
-            origin: chrome.runtime.id,
-        },
-        xhrFields : {
-            withCredentials: true
-        },
-    });
-    return data;
-}
-
-async function ajax_call(object) {
-    return new Promise((resolve, reject) => {
-        $.ajax(object).done((data) => {
-            resolve(data);
-        });
-    });
-}
-
-class Client {
-    constructor(tab) {
+    init(tab) {
         this.tab = tab;
-        this.update();
+        this.url = tab.url;
+        this.youtube = chrome.extension.getBackgroundPage().youtube;
+
+        this.titleField = document.getElementById("title"),
+        this.artistField = document.getElementById("artist"),
+        this.queueTable = document.getElementById("queueTable");
+
+        this.getQueue();
+        if (this.url.includes("watch?v=")) this.showDownload();
     }
 
-    async update() {
-        this.status = await getStatus();
-        if (!this.status.isLoggedIn) {
-            hideDownload();
-            hideQueue();
-            hideMessage();
-            showLogin(this.tab);
-        } else {
-            this.updatePopup();
+    getQueue() {
+        this.queue = this.youtube.queue;
+        for (let qid in this.queue) {
+            const item = this.queue[qid];
+            this.addToQueue(qid, item.artist, item.title, item.readyState);
         }
-    }
+        this.showQueue();
 
-    updatePopup() {
-        if (this.status.isLoggedIn) {
-            if (this.status.level >= 2) {
-                if (isYoutubeVideo(this.tab.url)) {
-                    var videoName = getVideoName(this.tab.title);
-                    hideMessage();
-                    showDownload(videoName);
-                } else {
-                    hideDownload();
-                    showMessage("Go to a YouTube video to download it.");
-                }
-                showQueue();
-            } else {
-                hideDownload();
-                hideQueue();
-                showMessage("You have no permission to use this app.");
-            }
-        } else {
-            hideDownload();
-            hideQueue();
-            hideMessage();
-            showLogin(this.tab);
-        }
-        var height = $("#banner").outerHeight() + $("#message:visible").outerHeight() + $("#download:visible").outerHeight() + $("#queue:visible").outerHeight();
-        $("html, body").height(height);
-    }
-
-    async login(tab, username, password) {
-        let data = await ajax_call({
-            url: "https://dupbit.com/api/login",
-            type: "post",
-            data: {
-                username,
-                password,
-                remote: "extension",
-                origin: chrome.runtime.id,
-            },
-            xhrFields : {
-                withCredentials: true
-            },
+        this.youtube.on("addToQueue", (data) => {
+            this.addToQueue(data.qid, data.artist, data.title, data.readyState);
         });
-        if (data.success && data.login) {
-            this.status = await getStatus();
-            this.updatePopup(tab);
-        } else {
-            showMessage("Login credentials incorrect.");
-            //reset
+    }
+
+    showQueue() {
+        if (this.queue.length > 0) {
+            document.getElementById("queue").style.display = "block";
         }
+    }
+
+    addToQueue(qid, artist, title, readyState) {
+        const imgSrc = readyState ? "ready.png" : "loading.gif";
+        const row = document.createElement("tr");
+        row.id = `qid_${qid}`;
+        row.innerHTML = `<td>${artist}</td><td>${title}</td><td><img width='16px' src='images/${imgSrc}'/></td>`;
+        this.queueTable.prepend(row);
+        this.showQueue();
+    }
+
+    updateQueueReadyState(qid) {
+        this.queueTable.querySelector(`#qid_${qid} img`).setAttribute("src", "images/ready.png");
+    }
+
+    showDownload() {
+        const name = this.tab.title.replace(" - YouTube", "").replace(/[\\\/:*?"<>|]/g, "");
+
+        this.artistField.value = name.includes(" - ") ? name.split(" - ")[0] : "";
+        this.titleField.value = name.includes(" - ") ? name.split(" - ")[1] : name;
+
+        document.getElementById("download").style.display = "block";
+        this.titleField.select();
+    }
+
+    async download() {
+        console.log("download");
+        const artist = this.artistField.value.replace(/[\\\/:*?"<>|]/g, "");
+        const title = this.titleField.value.replace(/[\\\/:*?"<>|]/g, "");
+
+        const result = await this.youtube.download(this.url, title, artist).then((result) => {
+            this.updateQueueReadyState(result.qid);
+        });
+
+        return false;
+    }
+}
+
+class Message {
+    static show(string) {
+        document.querySelector("#message span").innerText = string;
+        document.getElementById("message").style.display = "block";
+    }
+
+    static hide() {
+        document.getElementById("message").style.display = "none";
+    }
+}
+
+async function init(tab) {
+    const session = chrome.extension.getBackgroundPage().session;
+    await session.updateStatus();
+    if (!session.isLoggedIn) {
+        showScreen("login");
+    }
+
+    return session;
+}
+
+function showScreen(screen, data) {
+    if (typeof screen === "string") screen = [screen];
+
+    hideScreens();
+
+    if (screen.includes("login")) {
+        document.getElementById("submit").classList.remove("disabled");
+        document.getElementById("login").style.display = "block";
+    }
+
+    if (screen.includes("message")) {
+        document.getElementById("message_content").innerText = data.message;
+    }
+}
+
+function hideScreens() {
+    const screens = document.getElementsByClassName("screen");
+    for (let screen of screens) {
+        screen.style.display = "none";
     }
 }
 
 chrome.tabs.query({active: true, currentWindow: true}, async (tabList) => {
     const tab = tabList[0];
-    const status = await getStatus();
 
-    const client = new Client(tab);
+    const session = await init(tab);
+    const youtube = new YouTube(tab, session);
 
-    $("#login form").submit(() => {
-        $("#submit").addClass("disabled");
-        const username = $("#username").val();
-        const password = $("#password").val();
-        client.login(tab, username, password);
-        return false;
-    });
+    console.log(session);
+    console.log(youtube);
 
-    if (isYoutubeVideo(tab.url)) {
-        var ytid = getId(tab.url);
+    document.getElementById("login_form").onsubmit = async () => {
+        document.getElementById("submit").classList.add("disabled");
+        const username = document.getElementById("username").value
+        const password = document.getElementById("password").value;
 
-        $("#download form").submit(function() {
-            var artist = $("#artist").val().replace(/[\\\/:*?"<>|]/g, "");
-            var title = $("#title").val().replace(/[\\\/:*?"<>|]/g, "");
-            var qid = queue.length;
-            queue.push({artist: artist, title: title, readyState: false});
-            addToQueue(qid, artist, title, false);
-            chrome.extension.getBackgroundPage().download(qid, tab.url, title, artist);
-            return false;
+        session.login(username, password).then(() => {
+            if (session.isLoggedIn) document.getElementById("login").style.display = "none";
         });
+
+        return false;
+    };
+
+    document.getElementById("youtube_download_form").onsubmit = async (e) => {
+        e.preventDefault();
+        console.log("XXX");
+        youtube.download();
+        return false;
     }
 });

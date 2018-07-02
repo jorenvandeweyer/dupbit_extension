@@ -1,50 +1,13 @@
-queue = [];
 session = "";
 ws = "";
+youtube = "";
 actions = "";
 
-function download(qid, url, title, artist) {
-    $.ajax({
-        url: "https://dupbit.com/api/music/convert",
-        type: "post",
-        data: {
-            remote: true,
-            url,
-            title,
-            artist,
-        },
-        xhrFields : {
-            withCredentials: true
-        }
-    }).done(function(response){
-        if (title != "" && artist != "") {
-            var name = artist + " - " + title;
-        }
-        else if (title == "" && artist != "") {
-            var name = artist;
-        }
-        else if (title != "" && artist == "") {
-            var name = title;
-        }
-        else if (title == "" && artist == "") {
-            var name = ytid;
-        }
+function setup() {
+    session = new Session();
+    ws = new WS();
+    youtube = new YouTube();
 
-        chrome.downloads.download({url: "https://dupbit.com/api/music/downloadSong?id="+response.id, filename: "youtubedownloader/"+name+".mp3"});
-        queue[qid].readyState = true;
-        var views = chrome.extension.getViews({
-            type: "popup"
-        });
-        for (var i = 0; i < views.length; i++) {
-            views[i].updateQueueReadyState(qid);
-        }
-    });
-}
-
-setTimeout(setupWS, 500);
-
-function setupWS() {
-    ws = chrome.extension.getBackgroundPage().newWebSocket();
     actions = chrome.extension.getBackgroundPage().Actions;
     ws.on("message", messageHandler);
 }
@@ -70,3 +33,61 @@ async function messageHandler(msg) {
         }
     }
 }
+
+class YouTube extends EventEmitter {
+    constructor() {
+        super();
+        this.queue = [];
+    }
+
+    async download(url, title, artist) {
+        const qid = this.queue.length;
+        this.queue.push({qid, artist, title, readyState: false});
+
+        this.emit("addToQueue", this.queue[qid]);
+
+        const result = await Request.post("https://dupbit.com/api/music/convert", {
+            remote: true,
+            url,
+            title,
+            artist,
+        });
+
+        chrome.downloads.download({
+            url: result.downloadUrl,
+            filename: result.filename,
+        })
+
+        this.queue[qid].readyState = true;
+
+        return this.queue[qid];
+    }
+}
+
+class Session {
+    constructor() {
+        this.updateStatus();
+    }
+
+    async updateStatus() {
+        const result = await Request.get("https://dupbit.com/api/loginStatus", {
+            origin: chrome.runtime.id
+        });
+        Object.assign(this, result);
+    }
+
+    async login(username, password) {
+        const result = await Request.post("https://dupbit.com/api/login", {
+            username,
+            password,
+            remote: "extension",
+            origin: chrome.runtime.id,
+        });
+
+        if (result.success && result.login) {
+            await this.updateStatus();
+        }
+    }
+}
+
+setTimeout(setup, 500);

@@ -3,113 +3,112 @@
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
 		<script src="jquery.js"></script>
 		<style>
-		body {
-			margin: 0;
-			min-width: 400px;
-		}
-		@font-face {
-			font-family: Hiragino Kaku Gothic Std;
-			src: url(fonts/custom.otf);
-		}
-		.jumbotron {
-			margin: 0;
-			color: inherit;
-			text-align: center;
-			background-image: url(images/banner.png);
-			padding-top: 12px;
-			padding-bottom: 12px;
-		}
-		.jumbotron h1 {
-			color: #E0E0E0;
-			font-family: "Hiragino Kaku Gothic Std";
-			font-size: 30px;
-			margin: 0;
-		}
-		.panel-compact {
-			margin: 0;
-		}
-		.panel-compact .panel-heading, .panel-compact .panel-body {
-			padding: 8px 12px;
-		}
-		.form-group {
-			margin-bottom: 5px;
-		}
-		form, form .form-group:last-of-type {
-			margin: 0;
-		}
-		.btn-full-width {
-			display: block;
-			width: 100%;
-		}
-		#message, #download, #queue, #login {
-			display: none;
-		}
-		.table {
-			font-size: 14px;
-			border: 0;
-			margin: 0;
-		}
+    		body {
+    			margin: 0;
+    			min-width: 400px;
+    		}
+    		@font-face {
+    			font-family: Hiragino Kaku Gothic Std;
+    			src: url(fonts/custom.otf);
+    		}
+    		.jumbotron {
+    			margin: 0;
+    			color: inherit;
+    			text-align: center;
+    			background-image: url(images/banner.png);
+    			padding-top: 12px;
+    			padding-bottom: 12px;
+    		}
+    		.jumbotron h1 {
+    			color: #E0E0E0;
+    			font-family: "Hiragino Kaku Gothic Std";
+    			font-size: 30px;
+    			margin: 0;
+    		}
+    		.panel-compact {
+    			margin: 0;
+    		}
+    		.panel-compact .panel-heading, .panel-compact .panel-body {
+    			padding: 8px 12px;
+    		}
+    		.form-group {
+    			margin-bottom: 5px;
+    		}
+    		form, form .form-group:last-of-type {
+    			margin: 0;
+    		}
+    		.btn-full-width {
+    			display: block;
+    			width: 100%;
+    		}
+    		.screen {
+    			display: none;
+    		}
+    		.table {
+    			font-size: 14px;
+    			border: 0;
+    			margin: 0;
+    		}
 		</style>
 	</head>
-	<body>
-
+	<body id="body">
 		<div id="banner" class="jumbotron">
 			<h1> Dupb<font color="white">i</font>t </h1>
 		</div>
 
-		<div id="message" class="panel panel-default panel-compact">
+		<div id="message" class="screen panel panel-default panel-compact">
 			<div class="panel-heading"><b>Message</b></div>
 			<div class="panel-body">
-				<span></span>
+				<span id="message_content"></span>
 			</div>
 		</div>
 
-		<div id="download" class="panel panel-default panel-compact">
-			<div class="panel-heading"><b>Download</b></div>
-			<div class="panel-body">
-				<form>
-					<div class="form-group">
-						<div class="input-group">
-							<span class="input-group-addon"><i class="glyphicon glyphicon-headphones"></i></span>
-							<input id="artist" type="text" class="form-control" placeholder="Artist">
-						</div>
-					</div>
-					<div class="form-group">
-						<div class="input-group">
-							<span class="input-group-addon"><i class="glyphicon glyphicon-music"></i></span>
-							<input id="title" type="text" class="form-control" placeholder="Title">
-						</div>
-					</div>
-					<div class="form-group">
-						<div class="input-group">
-							<button type="submit" class="btn btn-primary btn-full-width"><i class='glyphicon glyphicon-download-alt'></i> Download</button>
-						</div>
-					</div>
-				</form>
-			</div>
-		</div>
+        <div id="download" class="screen panel panel-default panel-compact">
+            <div class="panel-heading"><b>Download</b></div>
+            <div class="panel-body">
+                <form id="youtube_download_form" action="#">
+                    <div class="form-group">
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="glyphicon glyphicon-headphones"></i></span>
+                            <input id="artist" type="text" class="form-control" placeholder="Artist">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="input-group">
+                            <span class="input-group-addon"><i class="glyphicon glyphicon-music"></i></span>
+                            <input id="title" type="text" class="form-control" placeholder="Title">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="input-group">
+                            <button type="submit" class="btn btn-primary btn-full-width"><i class='glyphicon glyphicon-download-alt'></i> Download</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
 
-		<div id="queue" class="panel panel-default panel-compact">
-			<div class="panel-heading"><b>Queue</b></div>
-			<div class="panel-body">
-				<table class="table table-hover table-condensed table-responsive">
-					<thead>
-						<tr>
-							<th>Artist</th>
-							<th>Title</th>
-							<th></th>
-						</tr>
-					</thead>
-					<tbody></tbody>
-				</table>
-			</div>
-		</div>
+        <div id="queue" class="screen panel panel-default panel-compact">
+            <div class="panel-heading"><b>Queue</b></div>
+            <div class="panel-body">
+                <table id="queueTable" class="table table-hover table-condensed table-responsive">
+                    <thead>
+                        <tr>
+                            <th>Artist</th>
+                            <th>Title</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
 	</body>
 
-	<div id="login" class="panel panel-default panel-compact">
+	<div id="login" class="screen panel panel-default panel-compact">
 		<div class="panel-heading"><b>Login</b></div>
 		<div class="panel-body">
-			<form>
+			<form id="login_form" action="#">
 				<div class="form-group">
 					<div class="input-group">
 						<span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
