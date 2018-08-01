@@ -17,8 +17,9 @@ class EventEmitter {
 const retrySeconds =  [0, 1, 5, 15, 30, 60, 180, 240];
 
 class WS extends EventEmitter{
-    constructor () {
+    constructor (host) {
         super();
+        this.host = host;
         this.retry = 0;
         this.noRetry = false;
         this.connect();
@@ -37,7 +38,7 @@ class WS extends EventEmitter{
             return this.emit("login");
         }
 
-        this.ws = new WebSocket(`wss://dupbit.com`);
+        this.ws = new WebSocket(`wss://${this.host}`);
 
         this.ws.onopen = (event) => {
             this.retry = 0;
@@ -62,7 +63,7 @@ class WS extends EventEmitter{
     }
 
     async checkStatus() {
-        return await Request.get("https://dupbit.com/api/loginStatus");
+        return await Request.get(`https://${this.host}/api/account/status`);
     }
 
     send(msg) {

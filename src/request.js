@@ -3,6 +3,7 @@ class Request {
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
             xhr.open("GET", `${url}?${encodeData(data)}`, true);
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
             xhr.withCredentials = true;
             xhr.onload = () => resolve(checkResponse(xhr));
             xhr.onerror = () => reject(xhr.statusText);
@@ -14,10 +15,11 @@ class Request {
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
             xhr.open("POST", url, true);
+            xhr.setRequestHeader("Content-Type", "application/json");
             xhr.withCredentials = true;
             xhr.onload = () => resolve(checkResponse(xhr));
             xhr.onerror = () => reject(xhr.statusText);
-            xhr.send(encodeData(data));
+            xhr.send(JSON.stringify(data));
         }).catch(() => null);
     }
 }
@@ -38,7 +40,7 @@ function checkResponse(xhr) {
 
     const contentType = xhr.getResponseHeader("Content-Type");
 
-    if (contentType === "application/json") {
+    if (contentType.includes("application/json")) {
         return JSON.parse(xhr.responseText);
     } else {
         return null;

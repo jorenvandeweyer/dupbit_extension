@@ -3,9 +3,11 @@ ws = "";
 youtube = "";
 actions = "";
 
+host = "dupbit.com";
+
 function setup() {
     session = new Session();
-    ws = new WS();
+    ws = new WS(host);
     youtube = new YouTube();
 
     actions = chrome.extension.getBackgroundPage().Actions;
@@ -46,15 +48,16 @@ class YouTube extends EventEmitter {
 
         this.emit("addToQueue", this.queue[qid]);
 
-        const result = await Request.post("https://dupbit.com/api/music/convert", {
+        const result = await Request.post(`https://${host}/api/music/convert`, {
             remote: true,
             url,
             title,
             artist,
+            provider: "youtube",
         });
 
         chrome.downloads.download({
-            url: result.downloadUrl,
+            url: `https://${host}${result.downloadUrl}`,
             filename: result.filename,
         })
 
@@ -70,14 +73,14 @@ class Session {
     }
 
     async updateStatus() {
-        const result = await Request.get("https://dupbit.com/api/loginStatus", {
+        const result = await Request.get(`https://${host}/api/account/status`, {
             origin: chrome.runtime.id
         });
         Object.assign(this, result);
     }
 
     async login(username, password) {
-        const result = await Request.post("https://dupbit.com/api/login", {
+        const result = await Request.post(`https://${host}/api/account/login`, {
             username,
             password,
             remote: "extension",

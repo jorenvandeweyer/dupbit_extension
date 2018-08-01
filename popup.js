@@ -62,7 +62,6 @@ class YouTube {
     }
 
     async download() {
-        console.log("download");
         const artist = this.artistField.value.replace(/[\\\/:*?"<>|]/g, "");
         const title = this.titleField.value.replace(/[\\\/:*?"<>|]/g, "");
 
@@ -140,7 +139,6 @@ chrome.tabs.query({active: true, currentWindow: true}, async (tabList) => {
 
     document.getElementById("youtube_download_form").onsubmit = async (e) => {
         e.preventDefault();
-        console.log("XXX");
         youtube.download();
         return false;
     }
