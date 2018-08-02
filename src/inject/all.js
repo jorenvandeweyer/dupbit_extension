@@ -1,4 +1,6 @@
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+var browser = browser || chrome;
+
+browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.event === "ping") return sendResponse({event: "pong"});
     if (events.hasOwnProperty(request.event)) {
         const data = events[request.event]();

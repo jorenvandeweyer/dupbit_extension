@@ -1,3 +1,5 @@
+var browser = browser || chrome;
+
 Actions = {
     youtube: (action, value) => {
         return new Promise(async (resolve, reject) => {
@@ -6,7 +8,7 @@ Actions = {
                 success: false,
                 reason: "No youtube clients open",
             });
-            chrome.tabs.sendMessage(yt_tab.id, {action, value}, (response) => {
+            browser.tabs.sendMessage(yt_tab.id, {action, value}, (response) => {
                 resolve(response);
             });
         });
@@ -17,7 +19,7 @@ function _findYoutube() {
     return new Promise((resolve, reject) => {
         let youtube_tab = null;
 
-        chrome.windows.getAll({ populate:true }, (windows) => {
+        browser.windows.getAll({ populate:true }, (windows) => {
             windows.forEach((window) => {
                 window.tabs.forEach((tab) => {
                     if (tab.url.includes("youtube.com")) {

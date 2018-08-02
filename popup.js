@@ -1,3 +1,5 @@
+var browser = browser || chrome;
+
 class Media {
     constructor(mediaInfo) {
         this.mediaInfo = mediaInfo;
@@ -6,7 +8,7 @@ class Media {
     }
 
     init() {
-        this.media = chrome.extension.getBackgroundPage().media;
+        this.media = browser.extension.getBackgroundPage().media;
 
         this.titleField = document.getElementById("title");
         this.artistField = document.getElementById("artist");
@@ -84,7 +86,7 @@ class Message {
 }
 
 async function init(tab) {
-    const session = chrome.extension.getBackgroundPage().session;
+    const session = browser.extension.getBackgroundPage().session;
     await session.updateStatus();
     if (!session.isLoggedIn) {
         showScreen("login");
@@ -99,7 +101,7 @@ function showScreen(screen, data) {
     hideScreens();
 
     if (screen.includes("login")) {
-        document.getElementById("submit").classList.remove("disabled");
+        document.getElementById("loginButton").classList.remove("disabled");
         document.getElementById("login").style.display = "block";
     }
 
@@ -115,7 +117,7 @@ function hideScreens() {
     }
 }
 
-chrome.tabs.query({active: true, currentWindow: true}, async (tabList) => {
+browser.tabs.query({active: true, currentWindow: true}, async (tabList) => {
 
     const tab = tabList[0];
     const session = await init(tab);
@@ -124,7 +126,7 @@ chrome.tabs.query({active: true, currentWindow: true}, async (tabList) => {
     if (session.isLoggedIn && session.level >= 2) {
         console.log("enough perm");
         await injectScript(tab);
-        chrome.tabs.sendMessage(tab.id, {event: "getSongInfo"}, (response) => {
+        browser.tabs.sendMessage(tab.id, {event: "getSongInfo"}, (response) => {
             if (response) {
                 media = new Media(response);
             }
@@ -149,11 +151,11 @@ chrome.tabs.query({active: true, currentWindow: true}, async (tabList) => {
 
 function injectScript(tab) {
     return new Promise((resolve, reject) => {
-        chrome.tabs.sendMessage(tab.id, {event: "ping"}, async (response) => {
+        browser.tabs.sendMessage(tab.id, {event: "ping"}, async (response) => {
             if (response && response.event === "pong") {
                 resolve();
             } else {
-                await chrome.tabs.executeScript(tab.id, {
+                await browser.tabs.executeScript(tab.id, {
                     file: "src/inject/all.js",
                 });
                 resolve(injectScript(tab));

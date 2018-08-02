@@ -1,3 +1,5 @@
+var browser = browser || chrome;
+
 session = "";
 ws = "";
 media = "";
@@ -10,7 +12,7 @@ function setup() {
     ws = new WS(host);
     media = new Media();
 
-    actions = chrome.extension.getBackgroundPage().Actions;
+    actions = browser.extension.getBackgroundPage().Actions;
     ws.on("message", messageHandler);
 }
 
@@ -55,7 +57,7 @@ class Media extends EventEmitter {
 
         const result = await Request.post(`https://${host}/api/music/convert`, mediaInfo);
 
-        chrome.downloads.download({
+        browser.downloads.download({
             url: `https://${host}${result.downloadUrl}`,
             filename: result.filename,
         })
@@ -73,7 +75,7 @@ class Session {
 
     async updateStatus() {
         const result = await Request.get(`https://${host}/api/account/status`, {
-            origin: chrome.runtime.id
+            origin: browser.runtime.id
         });
         Object.assign(this, result);
     }
@@ -83,7 +85,7 @@ class Session {
             username,
             password,
             remote: "extension",
-            origin: chrome.runtime.id,
+            origin: browser.runtime.id,
         });
 
         if (result.success && result.login) {
