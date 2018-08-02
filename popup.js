@@ -39,9 +39,7 @@ class Media {
 
     addToQueue(qid, artist, title, readyState) {
         const imgSrc = readyState ? "ready.png" : "loading.gif";
-        const row = document.createElement("tr");
-        row.id = `qid_${qid}`;
-        row.innerHTML = `<td>${artist}</td><td>${title}</td><td><img width='16px' src='images/${imgSrc}'/></td>`;
+        const row = createElement(`<tr id="qid_${qid}"><td>${artist}</td><td>${title}</td><td><img width='16px' src='images/${imgSrc}'/></td></tr>`, "tbody");
         this.queueTable.prepend(row);
         this.showQueue();
     }
@@ -117,6 +115,27 @@ function hideScreens() {
     }
 }
 
+function injectScript(tab) {
+    return new Promise((resolve, reject) => {
+        browser.tabs.sendMessage(tab.id, {event: "ping"}, async (response) => {
+            if (response && response.event === "pong") {
+                resolve();
+            } else {
+                await browser.tabs.executeScript(tab.id, {
+                    file: "src/inject/all.js",
+                });
+                resolve(injectScript(tab));
+            }
+        });
+    });
+}
+
+function createElement(htmlString, element="div") {
+    const el = document.createElement(element);
+    el.innerHTML = htmlString.trim();
+    return el.firstChild;
+}
+
 browser.tabs.query({active: true, currentWindow: true}, async (tabList) => {
 
     const tab = tabList[0];
@@ -148,18 +167,3 @@ browser.tabs.query({active: true, currentWindow: true}, async (tabList) => {
         media.download();
     }
 });
-
-function injectScript(tab) {
-    return new Promise((resolve, reject) => {
-        browser.tabs.sendMessage(tab.id, {event: "ping"}, async (response) => {
-            if (response && response.event === "pong") {
-                resolve();
-            } else {
-                await browser.tabs.executeScript(tab.id, {
-                    file: "src/inject/all.js",
-                });
-                resolve(injectScript(tab));
-            }
-        });
-    });
-}
