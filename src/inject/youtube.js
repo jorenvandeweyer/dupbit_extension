@@ -1,4 +1,5 @@
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.event) return;
       let result;
       if (request.action === "info") {
           result = info();

@@ -1,33 +1,30 @@
-class YouTube {
-    constructor(tab, session) {
-        if (session.level < 2) return;
-
-        this.valid = tab.url.includes("youtube.com");
-        if (this.valid) this.init(tab);
+class Media {
+    constructor(mediaInfo) {
+        this.mediaInfo = mediaInfo;
+        console.log(mediaInfo);
+        this.init();
     }
 
-    init(tab) {
-        this.tab = tab;
-        this.url = tab.url;
-        this.youtube = chrome.extension.getBackgroundPage().youtube;
+    init() {
+        this.media = chrome.extension.getBackgroundPage().media;
 
-        this.titleField = document.getElementById("title"),
-        this.artistField = document.getElementById("artist"),
+        this.titleField = document.getElementById("title");
+        this.artistField = document.getElementById("artist");
         this.queueTable = document.getElementById("queueTable");
 
         this.getQueue();
-        if (this.url.includes("watch?v=")) this.showDownload();
+        this.showDownload();
     }
 
     getQueue() {
-        this.queue = this.youtube.queue;
+        this.queue = this.media.queue;
         for (let qid in this.queue) {
             const item = this.queue[qid];
             this.addToQueue(qid, item.artist, item.title, item.readyState);
         }
         this.showQueue();
 
-        this.youtube.on("addToQueue", (data) => {
+        this.media.on("addToQueue", (data) => {
             this.addToQueue(data.qid, data.artist, data.title, data.readyState);
         });
     }
@@ -52,10 +49,8 @@ class YouTube {
     }
 
     showDownload() {
-        const name = this.tab.title.replace(" - YouTube", "").replace(/[\\\/:*?"<>|]/g, "");
-
-        this.artistField.value = name.includes(" - ") ? name.split(" - ")[0] : "";
-        this.titleField.value = name.includes(" - ") ? name.split(" - ")[1] : name;
+        this.artistField.value = this.mediaInfo.artist;
+        this.titleField.value = this.mediaInfo.title;
 
         document.getElementById("download").style.display = "block";
         this.titleField.select();
@@ -65,11 +60,15 @@ class YouTube {
         const artist = this.artistField.value.replace(/[\\\/:*?"<>|]/g, "");
         const title = this.titleField.value.replace(/[\\\/:*?"<>|]/g, "");
 
-        const result = await this.youtube.download(this.url, title, artist).then((result) => {
-            this.updateQueueReadyState(result.qid);
+        Object.assign(this.mediaInfo, {
+            remote: true,
+            artist,
+            title,
         });
 
-        return false;
+        const result = await this.media.download(this.mediaInfo).then((result) => {
+            this.updateQueueReadyState(result.qid);
+        });
     }
 }
 
@@ -117,29 +116,48 @@ function hideScreens() {
 }
 
 chrome.tabs.query({active: true, currentWindow: true}, async (tabList) => {
+
     const tab = tabList[0];
-
     const session = await init(tab);
-    const youtube = new YouTube(tab, session);
+    let media;
 
-    console.log(session);
-    console.log(youtube);
+    if (session.isLoggedIn && session.level >= 2) {
+        console.log("enough perm");
+        await injectScript(tab);
+        chrome.tabs.sendMessage(tab.id, {event: "getSongInfo"}, (response) => {
+            if (response) {
+                media = new Media(response);
+            }
+        });
+    }
 
-    document.getElementById("login_form").onsubmit = async () => {
-        document.getElementById("submit").classList.add("disabled");
+
+    document.getElementById("loginButton").onclick = () => {
+        document.getElementById("loginButton").classList.add("disabled");
         const username = document.getElementById("username").value
         const password = document.getElementById("password").value;
 
         session.login(username, password).then(() => {
             if (session.isLoggedIn) document.getElementById("login").style.display = "none";
         });
-
-        return false;
     };
 
-    document.getElementById("youtube_download_form").onsubmit = async (e) => {
-        e.preventDefault();
-        youtube.download();
-        return false;
+    document.getElementById("downloadButton").onclick = () => {
+        media.download();
     }
 });
+
+function injectScript(tab) {
+    return new Promise((resolve, reject) => {
+        chrome.tabs.sendMessage(tab.id, {event: "ping"}, async (response) => {
+            if (response && response.event === "pong") {
+                resolve();
+            } else {
+                await chrome.tabs.executeScript(tab.id, {
+                    file: "src/inject/all.js",
+                });
+                resolve(injectScript(tab));
+            }
+        });
+    });
+}

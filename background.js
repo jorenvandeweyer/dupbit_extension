@@ -1,6 +1,6 @@
 session = "";
 ws = "";
-youtube = "";
+media = "";
 actions = "";
 
 host = "dupbit.com";
@@ -8,7 +8,7 @@ host = "dupbit.com";
 function setup() {
     session = new Session();
     ws = new WS(host);
-    youtube = new YouTube();
+    media = new Media();
 
     actions = chrome.extension.getBackgroundPage().Actions;
     ws.on("message", messageHandler);
@@ -36,25 +36,24 @@ async function messageHandler(msg) {
     }
 }
 
-class YouTube extends EventEmitter {
+class Media extends EventEmitter {
     constructor() {
         super();
         this.queue = [];
     }
 
-    async download(url, title, artist) {
+    async download(mediaInfo) {
         const qid = this.queue.length;
-        this.queue.push({qid, artist, title, readyState: false});
+        this.queue.push({
+            qid,
+            artist: mediaInfo.artist,
+            title: mediaInfo.title,
+            readyState: false
+        });
 
         this.emit("addToQueue", this.queue[qid]);
 
-        const result = await Request.post(`https://${host}/api/music/convert`, {
-            remote: true,
-            url,
-            title,
-            artist,
-            provider: "youtube",
-        });
+        const result = await Request.post(`https://${host}/api/music/convert`, mediaInfo);
 
         chrome.downloads.download({
             url: `https://${host}${result.downloadUrl}`,
