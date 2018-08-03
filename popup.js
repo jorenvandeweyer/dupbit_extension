@@ -10,6 +10,10 @@ class Media {
     init() {
         this.media = browser.extension.getBackgroundPage().media;
 
+        this.media.on("progress", (data) => {
+            this.updateProgress(data.qid, data.percentage);
+        });
+
         this.titleField = document.getElementById("title");
         this.artistField = document.getElementById("artist");
         this.queueTable = document.getElementById("queueTable");
@@ -157,7 +161,7 @@ browser.tabs.query({active: true, currentWindow: true}, async (tabList) => {
     const session = await init(tab);
     let media;
 
-    if (session.isLoggedIn && session.level >= 2) {
+    if (session.isLoggedIn) {
         console.log("enough perm");
         await injectScript(tab);
         browser.tabs.sendMessage(tab.id, {event: "getSongInfo"}, (response) => {

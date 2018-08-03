@@ -55,7 +55,25 @@ class Media extends EventEmitter {
 
         this.emit("addToQueue", this.queue[qid]);
 
-        const result = await Request.post(`https://${host}/api/music/convert`, mediaInfo);
+        const request = new Promise((resolve, reject) => {
+            let lastPos = 0;
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", `https://${host}/api/music/convert`, true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.withCredentials = true;
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState === 3) {
+                    const data = xhr.responseText.substring(lastPos);
+                    this.emitProgress(qid, data);
+                    lastPos = xhr.responseText.length;
+                }
+            };
+            xhr.onload = () => resolve(checkResponse(xhr));
+            xhr.onerror = () => reject(xhr.statusText);
+            xhr.send(JSON.stringify(mediaInfo));
+        }).catch(() => null);
+
+        const result = await request;
 
         browser.downloads.download({
             url: `https://${host}${result.downloadUrl}`,
@@ -65,6 +83,25 @@ class Media extends EventEmitter {
         this.queue[qid].readyState = true;
 
         return this.queue[qid];
+    }
+
+    emitProgress(qid, string) {
+        try {
+            if (string[0] === ",") {
+                string = string.substring(1);
+                console.log(qid, string);
+                const data = JSON.parse(string);
+                console.log(data);
+                if (data.state === 2) {
+                    this.emit("progress", {
+                        qid,
+                        percentage: parseFloat(data.info.percent),
+                    });
+                }
+            }
+        } catch (e) {
+            //
+        }
     }
 }
 
