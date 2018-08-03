@@ -179,6 +179,6 @@ browser.tabs.query({active: true, currentWindow: true}, async (tabList) => {
     };
 
     document.getElementById("downloadButton").onclick = () => {
-        //media.updateProgress(1, 100);
+        media.download();
     }
 });
