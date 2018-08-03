@@ -40,12 +40,27 @@ class Media {
     addToQueue(qid, artist, title, readyState) {
         const imgSrc = readyState ? "ready.png" : "loading.gif";
         const row = createElement(`<tr id="qid_${qid}"><td>${artist}</td><td>${title}</td><td><img width='16px' src='images/${imgSrc}'/></td></tr>`, "tbody");
+        const progressRow = createElement(`<tr id="qid_progress_${qid}"><td colspan='3'><div class='progress' style='height:10px;'><div class='progress-bar progress-bar-striped active' role='progressbar' style='width:0%'></div></div></td></tr>`, "tbody");
+        this.queueTable.prepend(progressRow);
         this.queueTable.prepend(row);
         this.showQueue();
     }
 
     updateQueueReadyState(qid) {
         this.queueTable.querySelector(`#qid_${qid} img`).setAttribute("src", "images/ready.png");
+    }
+
+    updateProgress(qid, percentage) {
+        const progressBar = this.queueTable.querySelector(`#qid_progress_${qid} .progress-bar`);
+        if (percentage == 100) {
+            progressBar.style.width = percentage +"%";
+            progressBar.classList.remove("progress-bar-striped");
+            progressBar.classList.remove("active");
+            progressBar.classList.add("progress-bar-success");
+        }
+        else {
+            progressBar.style.width = percentage +"%";
+        }
     }
 
     showDownload() {
@@ -164,6 +179,6 @@ browser.tabs.query({active: true, currentWindow: true}, async (tabList) => {
     };
 
     document.getElementById("downloadButton").onclick = () => {
-        media.download();
+        //media.updateProgress(1, 100);
     }
 });
