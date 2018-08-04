@@ -22,8 +22,8 @@ async function messageHandler(msg) {
         const action = msg.action;
         if (action.name in actions) {
             const fn = actions[action.name];
-            const result = await fn(action.data.action, action.data.value);
-            console.log(result);
+            const result = await fn(action.data.action, action.data.value, action.tabId);
+            console.log("executing... : ", result);
             ws.send({
                 action: action.name,
                 feedback: result,

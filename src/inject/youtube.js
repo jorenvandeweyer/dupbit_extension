@@ -2,13 +2,16 @@ var browser = browser || chrome;
 
 browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.event) return;
-      let result;
-      if (request.action === "info") {
-          result = info();
-      } else {
-          result = executeOnPage(request.action, request.value);
-      }
-      sendResponse(result);
+    console.log(request);
+    if (request.hasOwnProperty("action")) {
+        let result;
+        if (request.action === "info") {
+            result = info();
+        } else {
+            result = executeOnPage(request.action, request.value);
+        }
+        sendResponse(result);
+    }
 });
 
 function info() {

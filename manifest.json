@@ -15,6 +15,10 @@
         {
             "matches": ["*://*.youtube.com/*"],
             "js": ["src/inject/youtube.js"]
+        },
+        {
+            "matches": ["*://*.soundcloud.com/*"],
+            "js": ["src/inject/soundcloud.js"]
         }
     ],
 	"browser_action": {
