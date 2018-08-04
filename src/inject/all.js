@@ -47,7 +47,7 @@ const supported = {
 };
 
 function parseVideoTitle(t) {
-    t = t.replace(/[\\\/:*?"<>|]/g, "");
+    t = t.replace(/[\\\/:*?"<>|]/g, "").replace(/ *\([^)]*\) */g, "").replace(/ *\[[^\]]*]/, "");
     const artist = t.includes(" - ") ? t.split(" - ")[0] : "";
     const title = t.includes(" - ") ? t.split(" - ")[1] : t;
 
