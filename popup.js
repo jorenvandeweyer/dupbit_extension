@@ -42,9 +42,15 @@ class Media {
     }
 
     addToQueue(qid, artist, title, readyState) {
+        if (artist.length > 27) {
+            artist = artist.substring(0,24) + "...";
+        }
+        if (title.length > 27) {
+            title = title.substring(0,24) + "...";
+        }
         const imgSrc = readyState ? "ready.png" : "loading.gif";
         const row = createElement(`<tr id="qid_${qid}"><td>${artist}</td><td>${title}</td><td><img width='16px' src='images/${imgSrc}'/></td></tr>`, "tbody");
-        const progressRow = createElement(`<tr id="qid_progress_${qid}"><td colspan='3'><div class='progress' style='height:10px;'><div class='progress-bar progress-bar-striped active' role='progressbar' style='width:0%'></div></div></td></tr>`, "tbody");
+        const progressRow = createElement(`<tr id="qid_progress_${qid}"><td colspan='3'><div class='progress' style='height:4px;margin-bottom: 10px;'><div class='progress-bar progress-bar-striped active' style='width:0%'></div></div></td></tr>`, "tbody");
         this.queueTable.prepend(progressRow);
         this.queueTable.prepend(row);
         this.showQueue();
