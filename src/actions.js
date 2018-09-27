@@ -4,13 +4,17 @@ Actions = {
     allPlayers: () => {
         return _allPlayers();
     },
-    createPlayer: (action, value) => {
-        browser.tabs.create({ url: value });
+    createPlayer: (data) => {
+        browser.tabs.create({ url: data.body.url });
     },
-    controlPlayer: (action, value, tabId) => {
-        console.log(action, value, tabId);
+    controlPlayer: (data) => {
+        const body = data.body;
+        console.log(body.action, body.value, body.tabId);
         return new Promise((resolve, reject) => {
-            browser.tabs.sendMessage(tabId, {action, value}, (response) => {
+            browser.tabs.sendMessage(body.tabId, {
+                action: body.action, 
+                value: body.value
+            }, (response) => {
                 resolve(response);
             });
         });

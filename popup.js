@@ -1,5 +1,6 @@
 var browser = browser || chrome;
 
+console.log(new Date().toString());
 class Media {
     constructor(mediaInfo) {
         this.mediaInfo = mediaInfo;
@@ -109,13 +110,13 @@ class Message {
 }
 
 async function init(tab) {
-    const session = browser.extension.getBackgroundPage().session;
-    await session.updateStatus();
-    if (!session.isLoggedIn) {
+    const dupbit = browser.extension.getBackgroundPage().dupbit;
+    await dupbit._validateToken();
+    if (!dupbit.authenticated) {
         showScreen("login");
     }
 
-    return session;
+    return dupbit;
 }
 
 function showScreen(screen, data) {
@@ -141,11 +142,13 @@ function hideScreens() {
 }
 
 function injectScript(tab) {
+    if (tab.url.includes("chrome://")) return false;
     return new Promise((resolve, reject) => {
         browser.tabs.sendMessage(tab.id, {event: "ping"}, async (response) => {
             if (response && response.event === "pong") {
                 resolve();
             } else {
+                console.log(tab);
                 await browser.tabs.executeScript(tab.id, {
                     file: "src/inject/all.js",
                 });
@@ -164,10 +167,10 @@ function createElement(htmlString, element="div") {
 browser.tabs.query({active: true, currentWindow: true}, async (tabList) => {
 
     const tab = tabList[0];
-    const session = await init(tab);
+    const dupbit = await init(tab);
     let media;
 
-    if (session.isLoggedIn) {
+    if (dupbit.authenticated) {
         console.log("enough perm");
         await injectScript(tab);
         browser.tabs.sendMessage(tab.id, {event: "getSongInfo"}, (response) => {
@@ -183,8 +186,8 @@ browser.tabs.query({active: true, currentWindow: true}, async (tabList) => {
         const username = document.getElementById("username").value
         const password = document.getElementById("password").value;
 
-        session.login(username, password).then(() => {
-            if (session.isLoggedIn) document.getElementById("login").style.display = "none";
+        dupbit.login(username, password).then(() => {
+            if (dupbit.authenticated) document.getElementById("login").style.display = "none";
         });
     };
 

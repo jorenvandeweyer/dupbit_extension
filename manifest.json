@@ -9,7 +9,7 @@
 	"version": "1.2.1",
 	"manifest_version": 2,
 	"background": {
-		"scripts": [ "src/actions.js", "src/request.js", "src/websocket.js", "background.js" ]
+		"scripts": [ "src/UAParser.js", "src/actions.js", "src/websocket.js", "background.js" ]
 	},
     "content_scripts": [
         {

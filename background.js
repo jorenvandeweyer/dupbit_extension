@@ -1,37 +1,35 @@
 var browser = browser || chrome;
 
-session = "";
-ws = "";
+dupbit = "";
 media = "";
 actions = "";
 
-host = "dupbit.com";
+host = "local.dupbit.com";
 
 function setup() {
-    session = new Session();
-    ws = new WS(host);
     media = new Media();
-
+    dupbit = new Dupbit_API({
+        host,
+    });
+    dupbit.on("message", messageHandler);
+    dupbit.on("error", console.log);
+    
     actions = browser.extension.getBackgroundPage().Actions;
-    ws.on("message", messageHandler);
 }
 
 async function messageHandler(msg) {
-    console.log(msg);
-    if (msg.action) {
-        const action = msg.action;
-        if (action.name in actions) {
-            const fn = actions[action.name];
-            const result = await fn(action.data.action, action.data.value, action.tabId);
-            console.log("executing... : ", result);
-            ws.send({
-                action: action.name,
-                feedback: result,
-                success: true,
-            });
+    if (typeof msg !== "object") return false;
+    if ("message" in msg.data) {
+        console.log(msg.data);
+    } else if ("call" in msg.data) {
+        if (msg.data.call in actions) {
+            const fn = actions[msg.data.call];
+            const result = await fn(msg.data);
+            console.log("execution...: ", result);
+            msg.reply(result);
         } else {
-            ws.send({
-                action: action.name,
+            console.log("not an action:", msg.data.call);
+            msg.reply({
                 success: false,
             });
         }
@@ -105,29 +103,15 @@ class Media extends EventEmitter {
     }
 }
 
-class Session {
-    constructor() {
-        this.updateStatus();
-    }
+function checkResponse(xhr) {
+    if (xhr.status < 200 || xhr.status >= 300) return null;
 
-    async updateStatus() {
-        const result = await Request.get(`https://${host}/api/account/status`, {
-            origin: browser.runtime.id
-        });
-        Object.assign(this, result);
-    }
+    const contentType = xhr.getResponseHeader("Content-Type");
 
-    async login(username, password) {
-        const result = await Request.post(`https://${host}/api/account/login`, {
-            username,
-            password,
-            remote: "extension",
-            origin: browser.runtime.id,
-        });
-
-        if (result.success && result.login) {
-            await this.updateStatus();
-        }
+    if (contentType.includes("application/json")) {
+        return JSON.parse(xhr.responseText);
+    } else {
+        return null;
     }
 }
 
