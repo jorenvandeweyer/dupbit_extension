@@ -1,15 +1,15 @@
 {
 	"name": "Dupbit Extension",
+	"version": "2.0.0",
+	"manifest_version": 2,
 	"description": "Interact with Dupbit",
 	"icons": {
-        "64": "images/favicon@64px.png",
-        "128": "images/favicon@128px.png",
-        "256": "images/favicon@256px.png"
+		"64": "assets/images/favicon@64px.png",
+		"128": "assets/images/favicon@128px.png",
+		"256": "assets/images/favicon@256px.png"
 	},
-	"version": "1.2.1",
-	"manifest_version": 2,
 	"background": {
-		"scripts": [ "src/UAParser.js", "src/actions.js", "src/websocket.js", "background.js" ]
+		"scripts": [ "assets/js/UAParser.js", "assets/js/dupbit-api.js", "src/actions.js", "background.js" ]
 	},
     "content_scripts": [
         {
@@ -22,9 +22,11 @@
         }
     ],
 	"browser_action": {
-		"default_icon": "images/favicon@64px.png",
+		"default_icon": "assets/images/favicon@64px.png",
 		"default_title": "Dupbit Extension",
 		"default_popup": "popup.html"
 	},
-	"permissions": [ "*://*/*", "tabs", "downloads","activeTab","webRequest", "storage" ]
+	"permissions": [ "*://*/*", "tabs", "downloads","activeTab","webRequest", "storage" ],
+	"content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
+
 }

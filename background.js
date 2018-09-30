@@ -1,21 +1,15 @@
 var browser = browser || chrome;
 
+const host = "local.dupbit.com";
+
+Dupbit_API.updateConstants({
+    host,
+    app_type: "browser",
+});
+
 dupbit = "";
 media = "";
 actions = "";
-
-host = "local.dupbit.com";
-
-function setup() {
-    media = new Media();
-    dupbit = new Dupbit_API({
-        host,
-    });
-    dupbit.on("message", messageHandler);
-    dupbit.on("error", console.log);
-    
-    actions = browser.extension.getBackgroundPage().Actions;
-}
 
 async function messageHandler(msg) {
     if (typeof msg !== "object") return false;
@@ -45,74 +39,41 @@ class Media extends EventEmitter {
     async download(mediaInfo) {
         const qid = this.queue.length;
         this.queue.push({
+            completed: false,
+            progress: 0,
             qid,
             artist: mediaInfo.artist,
             title: mediaInfo.title,
-            readyState: false
         });
 
-        this.emit("addToQueue", this.queue[qid]);
-
-        const request = new Promise((resolve, reject) => {
-            let lastPos = 0;
-            const xhr = new XMLHttpRequest();
-            xhr.open("POST", `https://${host}/api/music/convert`, true);
-            xhr.setRequestHeader("Content-Type", "application/json");
-            xhr.withCredentials = true;
-            xhr.onreadystatechange = () => {
-                if (xhr.readyState === 3) {
-                    const data = xhr.responseText.substring(lastPos);
-                    this.emitProgress(qid, data);
-                    lastPos = xhr.responseText.length;
-                }
-            };
-            xhr.onload = () => resolve(checkResponse(xhr));
-            xhr.onerror = () => reject(xhr.statusText);
-            xhr.send(JSON.stringify(mediaInfo));
-        }).catch(() => null);
-
-        const result = await request;
+        const result = await dupbit.sendAPICall(mediaInfo, {
+            method: "POST",
+            path: "/api/music/convert",
+            host,
+        });
 
         browser.downloads.download({
             url: `https://${host}${result.downloadUrl}`,
             filename: result.filename,
-        })
+        });
 
-        this.queue[qid].readyState = true;
+        this.queue[qid].completed = true;
+        this.queue[qid].progress = 100;
 
         return this.queue[qid];
     }
-
-    emitProgress(qid, string) {
-        try {
-            if (string[0] === ",") {
-                string = string.substring(1);
-                console.log(qid, string);
-                const data = JSON.parse(string);
-                console.log(data);
-                if (data.state === 2) {
-                    this.emit("progress", {
-                        qid,
-                        percentage: parseFloat(data.info.percent),
-                    });
-                }
-            }
-        } catch (e) {
-            //
-        }
-    }
 }
 
-function checkResponse(xhr) {
-    if (xhr.status < 200 || xhr.status >= 300) return null;
-
-    const contentType = xhr.getResponseHeader("Content-Type");
-
-    if (contentType.includes("application/json")) {
-        return JSON.parse(xhr.responseText);
-    } else {
-        return null;
-    }
+function setup() {
+    media = new Media();
+    dupbit = new Dupbit_API({
+        host,
+    }, true);
+    dupbit.on("ready", () => console.log("ready"));
+    dupbit.on("message", messageHandler);
+    dupbit.on("error", console.log);
+    
+    actions = browser.extension.getBackgroundPage().Actions;
 }
 
 setTimeout(setup, 500);

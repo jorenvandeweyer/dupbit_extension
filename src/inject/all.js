@@ -33,6 +33,14 @@ const supported = {
             provider: "youtube",
         };
     },
+    // "music.youtube.com": () => {
+    //     return {
+    //         url: "?", //cant find this shit 
+    //         title: document.querySelector(".title.ytmusic-player-bar").title,
+    //         artist: document.querySelector(".ytmusic-player-bar.subtitle a").text,
+    //         provider: "youtube-music",
+    //     }
+    // },
     "soundcloud.com": () => {
         const videoTitle = document.querySelector(".playbackSoundBadge__titleLink").title;
         const [artist, title] = parseVideoTitle(videoTitle);

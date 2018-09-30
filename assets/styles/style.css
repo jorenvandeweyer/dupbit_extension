@@ -1,0 +1,51 @@
+body {
+    margin: 0;
+    min-width: 400px;
+}
+@font-face {
+    font-family: Hiragino Kaku Gothic Std;
+    src: url(../fonts/custom.otf);
+}
+.jumbotron {
+    margin: 0;
+    color: inherit;
+    text-align: center;
+    background-image: url(../images/banner.png);
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+.jumbotron h1 {
+    color: #E0E0E0;
+    font-family: "Hiragino Kaku Gothic Std";
+    font-size: 30px;
+    margin: 0;
+}
+.panel-compact {
+    margin: 0;
+}
+.panel-compact .panel-heading, .panel-compact .panel-body {
+    padding: 8px 12px;
+}
+.form-group {
+    margin-bottom: 5px;
+}
+form, form .form-group:last-of-type {
+    margin: 0;
+}
+.btn-full-width {
+    display: block;
+    width: 100%;
+}
+.table {
+    font-size: 14px;
+    border: 0;
+    margin: 0;
+}
+tbody tr td.no-border {
+    border-width: 0px;
+}
+tbody tr td.loading-bar {
+    padding-top: 0px;
+    padding-bottom: 0px;
+    border-top: none;
+}

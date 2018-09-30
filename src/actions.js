@@ -9,7 +9,7 @@ Actions = {
     },
     controlPlayer: (data) => {
         const body = data.body;
-        console.log(body.action, body.value, body.tabId);
+        console.log(body.tabId, body.action, body.value);
         return new Promise((resolve, reject) => {
             browser.tabs.sendMessage(body.tabId, {
                 action: body.action, 

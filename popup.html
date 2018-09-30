@@ -1,96 +1,52 @@
 <!DOCTYPE html>
-<html>
-	<head>
-        <meta charset="utf-8"/>
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
-		<style>
-    		body {
-    			margin: 0;
-    			min-width: 400px;
-    		}
-    		@font-face {
-    			font-family: Hiragino Kaku Gothic Std;
-    			src: url(fonts/custom.otf);
-    		}
-    		.jumbotron {
-    			margin: 0;
-    			color: inherit;
-    			text-align: center;
-    			background-image: url(images/banner.png);
-    			padding-top: 12px;
-    			padding-bottom: 12px;
-    		}
-    		.jumbotron h1 {
-    			color: #E0E0E0;
-    			font-family: "Hiragino Kaku Gothic Std";
-    			font-size: 30px;
-    			margin: 0;
-    		}
-    		.panel-compact {
-    			margin: 0;
-    		}
-    		.panel-compact .panel-heading, .panel-compact .panel-body {
-    			padding: 8px 12px;
-    		}
-    		.form-group {
-    			margin-bottom: 5px;
-    		}
-    		form, form .form-group:last-of-type {
-    			margin: 0;
-    		}
-    		.btn-full-width {
-    			display: block;
-    			width: 100%;
-    		}
-    		.screen {
-    			display: none;
-    		}
-    		.table {
-    			font-size: 14px;
-    			border: 0;
-    			margin: 0;
-    		}
-		</style>
-	</head>
-	<body id="body">
-		<div id="banner" class="jumbotron">
-			<h1> Dupb<font color="white">i</font>t </h1>
-		</div>
+<html lang="en">
 
-		<div id="message" class="screen panel panel-default panel-compact">
-			<div class="panel-heading"><b>Message</b></div>
-			<div class="panel-body">
-				<span id="message_content"></span>
-			</div>
-		</div>
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="./assets/styles/style.css"/>
+    <script src="assets/js/vue.min.js"></script>
+</head>
 
-        <div id="download" class="screen panel panel-default panel-compact">
+<body> 
+    <div class="jumbotron">
+        <h1> Dupb<font color="white">i</font>t </h1>
+    </div>
+    <div id="app">
+        <div v-show="showScreenMessage()" class="panel panel-default panel-compact">
+            <div class="panel-heading"><b>Message</b></div>
+            <div class="panel-body">
+                <span id="message_content">{{message}}</span>
+            </div>
+        </div>
+
+        <div v-show="showScreenDownload()" class="panel panel-default panel-compact">
             <div class="panel-heading"><b>Download</b></div>
             <div class="panel-body">
                 <div class="form-group">
                     <div class="input-group">
                         <span class="input-group-addon"><i class="glyphicon glyphicon-headphones"></i></span>
-                        <input id="artist" type="text" class="form-control" placeholder="Artist">
+                        <input ref="artist" type="text" class="form-control" placeholder="Artist" v-model="mediaInfo.artist">
                     </div>
                 </div>
                 <div class="form-group">
                     <div class="input-group">
                         <span class="input-group-addon"><i class="glyphicon glyphicon-music"></i></span>
-                        <input id="title" type="text" class="form-control" placeholder="Title">
+                        <input type="text" class="form-control" placeholder="Title" v-model="mediaInfo.title">
                     </div>
                 </div>
                 <div class="form-group">
-                    <div class="input-group">
-                        <button id="downloadButton" class="btn btn-primary btn-full-width"><i class='glyphicon glyphicon-download-alt'></i> Download</button>
+                    <div class="input-group pull-right">
+                        <button @click="download()" class="btn btn-primary btn-full-width"><i class='glyphicon glyphicon-download-alt'></i> Download</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div id="queue" class="screen panel panel-default panel-compact">
+        <div v-show="showScreenQueue()" class="panel panel-default panel-compact">
             <div class="panel-heading"><b>Queue</b></div>
             <div class="panel-body">
-                <table id="queueTable" class="table">
+                <table class="table">
                     <thead>
                         <tr>
                             <th>Artist</th>
@@ -98,34 +54,54 @@
                             <th></th>
                         </tr>
                     </thead>
-                    <tbody></tbody>
+                    <tbody>
+                        <template v-for="song in queue">
+                            <tr v-bind:key="'textbar_'+song.qid">
+                                <td class="no-border">{{shortenString(song.artist)}}</td>
+                                <td class="no-border">{{shortenString(song.title)}}</td>
+                                <td class="no-border"><img width='16px' v-bind:src='song.completed ? "assets/images/ready.png" : "assets/images/loading.gif"'/></td>
+                            </tr>
+                            <tr v-bind:key="'loadingbar_' +song.qid">
+                                <td colspan='3' class="loading-bar">
+                                    <div class='progress' style='height:4px;margin-bottom: 10px;'>
+                                        <div 
+                                            class='progress-bar'
+                                            v-bind:class='{"progress-bar-striped": !song.completed, "active": !song.completed, "progress-bar-success": song.completed}'
+                                            v-bind:style='{width: song.progress + "%"}'>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
                 </table>
             </div>
         </div>
-	</body>
 
-	<div id="login" class="screen panel panel-default panel-compact">
-		<div class="panel-heading"><b>Login</b></div>
-		<div class="panel-body">
-			<div class="form-group">
-				<div class="input-group">
-					<span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-					<input id="username" type="text" class="form-control" placeholder="Username">
-				</div>
-			</div>
-			<div class="form-group">
-				<div class="input-group">
-					<span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
-					<input id="password" type="password" class="form-control" placeholder="Password">
-				</div>
-			</div>
-			<div class="form-group pull-right">
-				<div class="input-group">
-					<button id="loginButton" class="btn btn-primary btn-full-width">Login</button>
-				</div>
-			</div>
-		</div>
-	</div>
+        <div v-show="showScreenLogin()" class="panel panel-default panel-compact">
+            <div class="panel-heading"><b>Login</b></div>
+            <div class="panel-body">
+                <div class="form-group">
+                    <div class="input-group">
+                        <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
+                        <input type="text" class="form-control" placeholder="Username" v-model="credentials.username">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="input-group">
+                        <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
+                        <input type="password" class="form-control" placeholder="Password" v-model="credentials.password">
+                    </div>
+                </div>
+                <div class="form-group pull-right">
+                    <div class="input-group">
+                        <button @click="login()" class="btn btn-primary btn-full-width">Login</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="popup.js"></script>
+</body>
 
-	<script src="popup.js"></script>
 </html>
