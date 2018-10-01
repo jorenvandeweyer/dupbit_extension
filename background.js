@@ -1,6 +1,6 @@
 var browser = browser || chrome;
 
-const host = "local.dupbit.com";
+const host = "dupbit.com";
 
 Dupbit_API.updateConstants({
     host,
