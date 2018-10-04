@@ -45,6 +45,7 @@ class Media extends EventEmitter {
             artist: mediaInfo.artist,
             title: mediaInfo.title,
         });
+        this.emit("forceUpdate");
 
         const result = await dupbit.sendAPICall(mediaInfo, {
             method: "POST",
@@ -59,6 +60,8 @@ class Media extends EventEmitter {
 
         this.queue[qid].completed = true;
         this.queue[qid].progress = 100;
+
+        this.emit("forceUpdate");
 
         return this.queue[qid];
     }

@@ -1,4 +1,5 @@
 var browser = browser || chrome;
+const bgPage = browser.extension.getBackgroundPage();
 
 const vm = new Vue({
     el: "#app",
@@ -9,23 +10,37 @@ const vm = new Vue({
                 username: "",
                 password: "",
             },
-            media: browser.extension.getBackgroundPage().media,
-            queue: browser.extension.getBackgroundPage().media.queue,
             mediaInfo: {},
-            dupbit: browser.extension.getBackgroundPage().dupbit,
+        }
+    },
+    beforeMount: async function() {
+        await this.dupbit._validateToken();
+        bgPage.media.listeners = new Map(); //dirty fix for deadobjects in firefox
+        bgPage.media.on("forceUpdate", () => {
+            console.log("force");
+            this.$forceUpdate();
+        });
+    },
+    computed: {
+        queue: function() {
+            return bgPage.media.queue;
+        },
+        dupbit: function() {
+            return bgPage.dupbit;
         }
     },
     methods: {
         login: async function() {
             const result = await this.dupbit.login(this.credentials.username, this.credentials.password);
             console.log(result);
+            if (result.success) this.$forceUpdate();
             await this.dupbit.reconnect();
         },
         download: function() {
             this.mediaInfo.artist = this.mediaInfo.artist.replace(/[\\/:*?"<>|]/g, "");
             this.mediaInfo.title = this.mediaInfo.title.replace(/[\\/:*?"<>|]/g, "");
             console.log(this.mediaInfo);
-            this.media.download(this.mediaInfo);
+            bgPage.media.download(this.mediaInfo);
         },
         shortenString(string, length=27) {
             if (string.length > length) {
@@ -72,8 +87,6 @@ function injectScript(tab) {
 
 browser.tabs.query({active: true, currentWindow: true}, async (tabList) => {
     const tab = tabList[0];
-    await vm.dupbit._validateToken();
-
     if (tab.url.includes("chrome://")) return console.log("not injected on:", tab.url);
 
     await injectScript(tab);
