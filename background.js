@@ -27,6 +27,16 @@ async function messageHandler(msg) {
                 success: false,
             });
         }
+    } else if("update" in msg.data) {
+        const update = msg.data.update;
+        if (typeof update.qid !== "undefined") {
+            const qid = update.qid;
+            if (update.data && update.data.state && update.data.state === 2 && update.data.info) {
+                const info = update.data.info;
+                media.queue[qid].progress = info.percent;
+                media.emit("forceUpdate");
+            }
+        }
     }
 }
 
@@ -38,6 +48,7 @@ class Media extends EventEmitter {
 
     async download(mediaInfo) {
         const qid = this.queue.length;
+        mediaInfo.qid = qid;
         this.queue.push({
             completed: false,
             progress: 0,
